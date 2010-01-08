@@ -172,7 +172,6 @@
 					"-lSDL",
 					"-lSDL_net",
 					"-lSDL_image",
-					"-lSDL_ttf",
 				);
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;

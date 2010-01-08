@@ -28,5 +28,7 @@ int main(int argc, char* argv[])
     //tell bot to stop
     SRV1_sendRawMove( bot_connection, MOTORSPEED_OFF, MOTORSPEED_OFF, 0 );
     
-    return 0;
+    SRV1_free(bot_connection);
+    
+	return 0;
 }
