@@ -42,6 +42,7 @@ void SRV1_sendRawMove( SRV1_connection * connection, int8_t left_speed, int8_t r
 void SRV1_setLasers( SRV1_connection * connection, bool enabled ); //pew pew pew
 
 //if you use a different size, the robot was to wait a bit for the new image size to be ready
+char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQuality quality, uint32_t * _image_size );
 SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality );
 
 //This function is implemented very crappily on the bot and almost never work properly unless very close to a very flat object.

@@ -65,11 +65,6 @@ void SRV1_sendRawMove( SRV1_connection * connection, int8_t left_speed, int8_t r
     assert( memcmp( "#M", responce, 2 ) == 0 );
 }
 
-void SRV1_turn( SRV1_connection * connection, int angle )
-{
-    
-}
-
 void SRV1_setLasers( SRV1_connection * connection, bool enabled )
 {
     char message[1];
@@ -80,7 +75,7 @@ void SRV1_setLasers( SRV1_connection * connection, bool enabled )
     connection->laser_enabled = enabled;
 }
 
-SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality )
+char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQuality quality, uint32_t * _image_size )
 {
     if( connection->current_image_size != size )
         _SRV1_setResolution( connection, size );
@@ -109,16 +104,21 @@ SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, Image
         index += SDLNet_TCP_Recv( connection->tcpsock, image_buffer + index, image_size - index );
     }
     
-    FILE * image_file = fopen( "/tmp/file.jpg", "w" );
-    assert( image_file );
-    fwrite( image_buffer, image_size, 1, image_file );
-    fclose( image_file );
+    SDLNet_TCP_DelSocket( generalSocketSet, connection->tcpsock );
     
+    *_image_size = image_size;
+    return image_buffer;
+}
+
+SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality )
+{
+    uint32_t image_size;
+    char * image_buffer = SRV1_getRawJPG( connection, size, quality, &image_size );
     SDL_RWops * rwop = SDL_RWFromMem( image_buffer, image_size );
     SDL_Surface * image = IMG_LoadJPG_RW( rwop );
-    SDLNet_TCP_DelSocket( generalSocketSet, connection->tcpsock );
     return image;
 }
+
 
 void _SRV1_setResolution( SRV1_connection * connection, ImageSize size )
 {
