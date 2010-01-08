@@ -47,9 +47,9 @@
 		08FB7794FE84155DC02AAC07 /* SRV-1 */ = {
 			isa = PBXGroup;
 			children = (
+				BE6805FB10F683CE005CFEC1 /* Cocoa.framework */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
-				BE6805FB10F683CE005CFEC1 /* Cocoa.framework */,
 			);
 			name = "SRV-1";
 			sourceTree = "<group>";

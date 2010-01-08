@@ -91,7 +91,7 @@ char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQualit
     int responce = SDLNet_CheckSockets( generalSocketSet, TIMEOUT );
     assert( responce > 0 );
     
-    unsigned char buffer[10];
+    unsigned char buffer[10] = {0};
     int result = SDLNet_TCP_Recv( connection->tcpsock, buffer, 10 );
     assert( result == 10 );
     assert( memcmp( "##IMJ", buffer, strlen( "##IMJ" ) ) == 0 );
@@ -141,8 +141,8 @@ void _SRV1_setImageQuality( SRV1_connection * connection, ImageQuality quality )
 {
     assert( quality >= '1' && quality <= '8' );
     char message[2] = { 'q', quality };
-    char responce[13];
-    assert( _SRV1_sendBasicCommand( connection, message, 2, responce, 13 ) == 13 );
+    char responce[15];
+    assert( _SRV1_sendBasicCommand( connection, message, 2, responce, 15 ) == 15 );
     assert( memcmp( "##quality", responce, strlen( "##quality" ) ) == 0 );
     connection->current_image_quality = quality;
     usleep( 250000 );
