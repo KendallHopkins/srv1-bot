@@ -8,14 +8,16 @@ typedef enum {
     MOTORSPEED_FORWARD_100 = 100,
     MOTORSPEED_FORWARD_75 = 75,
     MOTORSPEED_FORWARD_50 = 50,
+    MOTORSPEED_FORWARD_25 = 25, /* not powerful enough to spin bot */
     MOTORSPEED_OFF = 0,
+    MOTORSPEED_REVERSE_25 = -25, /* not powerful enough to spin bot */
     MOTORSPEED_REVERSE_50 = -50,
     MOTORSPEED_REVERSE_75 = -75,
     MOTORSPEED_REVERSE_100 = -100
 } MotorSpeed;
 
 typedef enum {
-    IMAGESIZE_80_64 = 1,
+    /* IMAGESIZE_80_64 = 1, specs seem not to support this size */
     IMAGESIZE_160_120 = 3, /* 0.03 second */
     IMAGESIZE_320_240 = 5, /* 0.08 second */
     IMAGESIZE_640_480 = 7, /* 0.33 second */
