@@ -35,6 +35,12 @@ typedef enum {
     IMAGEQUALITY_8 = '8'
 } ImageQuality;
 
+typedef enum {
+    AUTOVISIONFLAG_AEC = 1 << 0, //1
+    AUTOVISIONFLAG_AWB = 1 << 1, //2
+    AUTOVISIONFLAG_AGC = 1 << 2  //4
+} ImageAutoVisionFlag;
+
 void SRV1_init();
 SRV1_connection * SRV1_new( const char * ip );
 void SRV1_free( SRV1_connection * connection );
@@ -42,8 +48,8 @@ void SRV1_sendRawMove( SRV1_connection * connection, int8_t left_speed, int8_t r
 void SRV1_setLasers( SRV1_connection * connection, bool enabled ); //pew pew pew
 
 //if you use a different size, the robot was to wait a bit for the new image size to be ready
-char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQuality quality, uint32_t * _image_size );
-SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality );
+char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQuality quality, ImageAutoVisionFlag flag, uint32_t * _image_size );
+SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality, ImageAutoVisionFlag flag );
 
 //This function is implemented very crappily on the bot and almost never work properly unless very close to a very flat object.
 int16_t SRV1_laserMeasureDistance( SRV1_connection * connection );

@@ -6,7 +6,11 @@
 #include <time.h>
 #include <stdlib.h>
 
+//wait for bot to return data
 #define TIMEOUT 10000
+
+//wait for the camera to reset for new settings
+#define CAMERA_SWAP_WAIT 250000
 
 SDLNet_SocketSet generalSocketSet;
 
@@ -14,11 +18,13 @@ struct _SRV1_connection {
     TCPsocket tcpsock;
     ImageSize current_image_size;
     ImageQuality current_image_quality;
+    ImageAutoVisionFlag current_flag;
     bool laser_enabled;
 };
 
 void _SRV1_setResolution( SRV1_connection * connection, ImageSize size );
 void _SRV1_setImageQuality( SRV1_connection * connection, ImageQuality quality );
+void _SRV1_autoVision( SRV1_connection * connection, ImageAutoVisionFlag flag );
 
 void SRV1_init()
 {
@@ -36,6 +42,7 @@ SRV1_connection * SRV1_new( const char * ip_address )
     new_connection->tcpsock = SDLNet_TCP_Open( &ipaddress );
     new_connection->current_image_size = 0;
     new_connection->current_image_quality = 0;
+    new_connection->current_flag = 0;
     new_connection->laser_enabled = 0;
     assert( new_connection->tcpsock );
     return new_connection;
@@ -47,36 +54,39 @@ void SRV1_free( SRV1_connection * connection )
     free( connection );
 }
 
-int _SRV1_sendBasicCommand( SRV1_connection * connection, char * message, int message_length, char * responce, int respone_length )
+int _SRV1_sendBasicCommand( SRV1_connection * connection, char * message, int message_length, char * response, int respone_length )
 {
     SDLNet_TCP_AddSocket( generalSocketSet, connection->tcpsock );
     assert( SDLNet_TCP_Send( connection->tcpsock, message, message_length ) > 0 );
     assert( SDLNet_CheckSockets( generalSocketSet, TIMEOUT ) );
-    int actual_responce_length = SDLNet_TCP_Recv( connection->tcpsock, responce, respone_length );
+    int actual_response_length = SDLNet_TCP_Recv( connection->tcpsock, response, respone_length );
     SDLNet_TCP_DelSocket( generalSocketSet, connection->tcpsock );
-    return actual_responce_length;
+    return actual_response_length;
 }
 
 void SRV1_sendRawMove( SRV1_connection * connection, int8_t left_speed, int8_t right_speed, uint8_t time_in_centiseconds )
 {
     char message[4] = { 'M', left_speed, right_speed, time_in_centiseconds };
-    char responce[2];
-    assert( _SRV1_sendBasicCommand( connection, message, 4, responce, 2 ) == 2 );
-    assert( memcmp( "#M", responce, 2 ) == 0 );
+    char response[2];
+    assert( _SRV1_sendBasicCommand( connection, message, 4, response, 2 ) == 2 );
+    assert( memcmp( "#M", response, 2 ) == 0 );
 }
 
 void SRV1_setLasers( SRV1_connection * connection, bool enabled )
 {
     char message[1];
     message[0] = enabled ? 'l' : 'L';
-    char responce[2];
-    assert( _SRV1_sendBasicCommand( connection, message, 1, responce, 2 ) == 2 );
-    assert( ( responce[0] == '#' ) && ( responce[1] == message[0] ) );
+    char response[5];
+    assert( _SRV1_sendBasicCommand( connection, message, 1, response, 5 ) == 2 );
+    assert( ( response[0] == '#' ) && ( response[1] == message[0] ) );
     connection->laser_enabled = enabled;
 }
 
-char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQuality quality, uint32_t * _image_size )
+char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQuality quality, ImageAutoVisionFlag flag, uint32_t * _image_size )
 {
+    if( connection->current_flag != flag )
+        _SRV1_autoVision( connection, flag );
+        
     if( connection->current_image_size != size )
         _SRV1_setResolution( connection, size );
     
@@ -88,14 +98,14 @@ char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQualit
     char message[4] = { 'I' };
     assert( SDLNet_TCP_Send( connection->tcpsock, message, 1 ) > 0 );
     
-    int responce = SDLNet_CheckSockets( generalSocketSet, TIMEOUT );
-    assert( responce > 0 );
+    int response = SDLNet_CheckSockets( generalSocketSet, TIMEOUT );
+    assert( response > 0 );
     
-    unsigned char buffer[10] = {0};
+    unsigned char buffer[10];
     int result = SDLNet_TCP_Recv( connection->tcpsock, buffer, 10 );
     assert( result == 10 );
     assert( memcmp( "##IMJ", buffer, strlen( "##IMJ" ) ) == 0 );
-    uint32_t image_size = ( (uint32_t)buffer[6] ) + ( ((uint32_t)buffer[7])*256 ) + ( ((uint32_t)buffer[8])*65536 ) + ( ((uint32_t)buffer[9])*16777216 );
+    uint32_t image_size = ( (uint32_t)buffer[6] ) + ( ((uint32_t)buffer[7])<<8 ) + ( ((uint32_t)buffer[8])<<16 ) + ( ((uint32_t)buffer[9])*24 );
     
     char * image_buffer = malloc( image_size );
     int index = 0;
@@ -110,10 +120,10 @@ char * SRV1_getRawJPG( SRV1_connection * connection, ImageSize size, ImageQualit
     return image_buffer;
 }
 
-SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality )
+SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, ImageQuality quality, ImageAutoVisionFlag flag )
 {
     uint32_t image_size;
-    char * image_buffer = SRV1_getRawJPG( connection, size, quality, &image_size );
+    char * image_buffer = SRV1_getRawJPG( connection, size, quality, flag, &image_size );
     SDL_RWops * rwop = SDL_RWFromMem( image_buffer, image_size );
     SDL_Surface * image = IMG_LoadJPG_RW( rwop );
     return image;
@@ -130,42 +140,49 @@ void _SRV1_setResolution( SRV1_connection * connection, ImageSize size )
         case IMAGESIZE_1280_1024: message[0] = 'A'; break;
         default: assert( 0 );
     }
-    char responce[2];
-    assert( _SRV1_sendBasicCommand( connection, message, 1, responce, 2 ) == 2 );
-    assert( ( responce[0] == '#' ) && ( responce[1] == message[0] ) );
+    char response[2];
+    assert( _SRV1_sendBasicCommand( connection, message, 1, response, 2 ) == 2 );
+    assert( ( response[0] == '#' ) && ( response[1] == message[0] ) );
     connection->current_image_size = size;
-    usleep( 250000 );
+    usleep( CAMERA_SWAP_WAIT );
 }
 
 void _SRV1_setImageQuality( SRV1_connection * connection, ImageQuality quality )
 {
     assert( quality >= '1' && quality <= '8' );
     char message[2] = { 'q', quality };
-    char responce[15];
-    assert( _SRV1_sendBasicCommand( connection, message, 2, responce, 15 ) == 15 );
-    assert( memcmp( "##quality", responce, strlen( "##quality" ) ) == 0 );
+    char response[15];
+    assert( _SRV1_sendBasicCommand( connection, message, 2, response, 15 ) == 15 );
+    assert( memcmp( "##quality", response, strlen( "##quality" ) ) == 0 );
     connection->current_image_quality = quality;
-    usleep( 250000 );
+    usleep( CAMERA_SWAP_WAIT );
 }
-
-//void SRV1_enableColorSegmentation( SRV1_connection * connection )
-//{
-//    char responce[4];
-//    assert( _SRV1_sendBasicCommand( connection, "g1", 2, responce, 4 ) == 4 );
-//    assert( memcmp( "##g1", responce, 4 ) == 0 );
-//}
 
 int16_t SRV1_laserMeasureDistance( SRV1_connection * connection )
 {
-    char responce[200];
-    _SRV1_sendBasicCommand( connection, "R", 1, responce, 200 );
-    if( memcmp( "##Range(cm) = ", responce, 14 ) != 0 ) return -1;
+    char response[200];
+    _SRV1_sendBasicCommand( connection, "R", 1, response, 200 );
+    if( memcmp( "##Range(cm) = ", response, 14 ) != 0 ) return -1;
     
     char number_string[6] = {0};
     int i = 0;
-    while( i < 5 && responce[i+14] >= '0' && responce[i+14] <= '9' ) {
-        number_string[i] = responce[i+14];
+    while( i < 5 && response[i+14] >= '0' && response[i+14] <= '9' ) {
+        number_string[i] = response[i+14];
         i++;
     }
     return atoi( number_string );
+}
+
+void _SRV1_autoVision( SRV1_connection * connection, ImageAutoVisionFlag flag )
+{
+    char flag_data = flag + '0';
+    char message[3] = { 'v', 'a', flag_data };
+    char response[7];
+
+    _SRV1_sendBasicCommand( connection, message, 3, response, 7 );
+    assert( memcmp( "##va", response, 4 ) == 0 );
+    assert( response[4] == flag_data );
+    assert( memcmp( "\r\n", response + 5, 2 ) == 0 );
+    connection->current_flag = flag;
+    usleep( CAMERA_SWAP_WAIT );
 }
