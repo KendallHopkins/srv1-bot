@@ -4,6 +4,12 @@
 
 typedef struct _SRV1_connection SRV1_connection;
 
+typedef struct _SRV1_Coordinate SRV1_Coordinate;
+struct _SRV1_Coordinate {
+    double x;
+    double y;
+};
+
 typedef enum {
     MOTORSPEED_FORWARD_100 = 100,
     MOTORSPEED_FORWARD_75 = 75,
@@ -53,3 +59,6 @@ SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, Image
 
 //This function is implemented very crappily on the bot and almost never work properly unless very close to a very flat object.
 int16_t SRV1_laserMeasureDistance( SRV1_connection * connection );
+
+void SRV1_setBlobColorRange( SRV1_connection * connection, uint8_t color_bin_index, uint8_t red_min, uint8_t red_max, uint8_t green_min, uint8_t green_max, uint8_t blue_min, uint8_t blue_max );
+SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, uint8_t * array_size );

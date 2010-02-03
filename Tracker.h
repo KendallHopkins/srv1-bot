@@ -12,8 +12,6 @@
 #define PROXIMITY_THRESHOLD_Y 50
 #define PROXIMITY_THRESHOLD_X 50
 
-typedef struct _SRV1_Coordinate { double x; double y; } SRV1_Coordinate;
-
 SRV1_Coordinate * newCoordinate( double x, double y );
 
 double lineLength( SRV1_Coordinate * c );

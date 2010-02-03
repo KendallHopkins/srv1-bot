@@ -10,6 +10,7 @@
 		BE6805FC10F683CE005CFEC1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE6805FB10F683CE005CFEC1 /* Cocoa.framework */; };
 		BE68063710F68B9E005CFEC1 /* srv1.c in Sources */ = {isa = PBXBuildFile; fileRef = BE68063610F68B9E005CFEC1 /* srv1.c */; };
 		BE68065310F6928D005CFEC1 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = BE68065210F6928D005CFEC1 /* main.c */; };
+		BE93BBDB1119079700F32F00 /* Tracker.c in Sources */ = {isa = PBXBuildFile; fileRef = BE93BBD91119079700F32F00 /* Tracker.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +31,8 @@
 		BE68063510F68B9E005CFEC1 /* srv1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = srv1.h; sourceTree = "<group>"; };
 		BE68063610F68B9E005CFEC1 /* srv1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = srv1.c; sourceTree = "<group>"; };
 		BE68065210F6928D005CFEC1 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		BE93BBD91119079700F32F00 /* Tracker.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Tracker.c; sourceTree = "<group>"; };
+		BE93BBDA1119079700F32F00 /* Tracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Tracker.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +60,8 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				BE93BBDA1119079700F32F00 /* Tracker.h */,
+				BE93BBD91119079700F32F00 /* Tracker.c */,
 				BE68063510F68B9E005CFEC1 /* srv1.h */,
 				BE68063610F68B9E005CFEC1 /* srv1.c */,
 				BE68065210F6928D005CFEC1 /* main.c */,
@@ -117,6 +122,7 @@
 			files = (
 				BE68063710F68B9E005CFEC1 /* srv1.c in Sources */,
 				BE68065310F6928D005CFEC1 /* main.c in Sources */,
+				BE93BBDB1119079700F32F00 /* Tracker.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

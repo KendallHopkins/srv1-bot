@@ -10,7 +10,7 @@
 #define TIMEOUT 10000
 
 //wait for the camera to reset for new settings
-#define CAMERA_SWAP_WAIT 250000
+#define CAMERA_SWAP_WAIT 500000
 
 SDLNet_SocketSet generalSocketSet;
 
@@ -185,4 +185,66 @@ void _SRV1_autoVision( SRV1_connection * connection, ImageAutoVisionFlag flag )
     assert( memcmp( "\r\n", response + 5, 2 ) == 0 );
     connection->current_flag = flag;
     usleep( CAMERA_SWAP_WAIT );
+}
+
+void SRV1_setBlobColorRange( SRV1_connection * connection, uint8_t color_bin_index, uint8_t red_min, uint8_t red_max, uint8_t green_min, uint8_t green_max, uint8_t blue_min, uint8_t blue_max )
+{
+    char response[200];
+    char message[25];
+    int message_size = snprintf( message, 25, "vc%01d%03d%03d%03d%03d%03d%03d", color_bin_index, red_min, red_max, green_min, green_max, blue_min, blue_max );
+    _SRV1_sendBasicCommand( connection, message, message_size, response, 200 );
+    //TODO: program checks
+}
+
+SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, uint8_t * array_size )
+{
+    char response[1024];
+    char message[25];
+    int message_size = snprintf( message, 25, "vb%01d", color_bin_index );
+    int responce_size = _SRV1_sendBasicCommand( connection, message, message_size, response, 1024 );
+    
+    int i = 0;
+    while( response[i] != '\r' && response[i+1] != '\n' ){
+        if( i >= responce_size ) return NULL;
+        i++;
+    }
+    i += 2;
+    
+    int size;
+    int x_min, x_max, y_min, y_max;
+    
+    int result = sscanf( response + i, " %d - %d %d %d %d  \r\n", &size, &x_min, &x_max, &y_min, &y_max );
+    if( result != 5 ) return NULL;
+    
+    
+    SRV1_Coordinate * new_coordinate = (SRV1_Coordinate*)malloc( sizeof( SRV1_Coordinate ) );
+    new_coordinate->x = (x_min+x_max)/2;
+    new_coordinate->y = (y_min+y_max)/2;
+    
+    switch( connection->current_image_size ) {
+        case IMAGESIZE_160_120:
+            new_coordinate->y -= 120;
+            new_coordinate->y = fabs( new_coordinate->y );
+            new_coordinate->x -= 80;
+            break;
+        case IMAGESIZE_320_240:
+            new_coordinate->y -= 240;
+            new_coordinate->y = fabs( new_coordinate->y );
+            new_coordinate->x -= 160;
+            break;
+        case IMAGESIZE_640_480:
+            new_coordinate->y -= 480;
+            new_coordinate->y = fabs( new_coordinate->y );
+            new_coordinate->x -= 320;
+            break;
+        case IMAGESIZE_1280_1024:
+            new_coordinate->y -= 1024;
+            new_coordinate->y = fabs( new_coordinate->y );
+            new_coordinate->x -= 640;
+            break;
+        default:
+            break;
+    }
+    
+    return new_coordinate;
 }
