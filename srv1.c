@@ -196,8 +196,11 @@ void SRV1_setBlobColorRange( SRV1_connection * connection, uint8_t color_bin_ind
     //TODO: program checks
 }
 
-SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, uint8_t * array_size )
+SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, ImageSize image_size, uint8_t * array_size )
 {
+    if( connection->current_image_size != image_size )
+        _SRV1_setResolution( connection, image_size );
+    
     char response[1024];
     char message[25];
     int message_size = snprintf( message, 25, "vb%01d", color_bin_index );
