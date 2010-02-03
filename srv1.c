@@ -196,12 +196,12 @@ void SRV1_setBlobColorRange( SRV1_connection * connection, uint8_t color_bin_ind
     //TODO: program checks
 }
 
-SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, ImageSize image_size, uint8_t * array_size )
+SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, ImageSize image_size )
 {
     if( connection->current_image_size != image_size )
         _SRV1_setResolution( connection, image_size );
     
-    char response[1024];
+    char response[1024] = {0};
     char message[25];
     int message_size = snprintf( message, 25, "vb%01d", color_bin_index );
     int responce_size = _SRV1_sendBasicCommand( connection, message, message_size, response, 1024 );
@@ -213,13 +213,14 @@ SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bi
     }
     i += 2;
     
+    printf("%s",response);
+    
     int size;
     int x_min, x_max, y_min, y_max;
     
     int result = sscanf( response + i, " %d - %d %d %d %d  \r\n", &size, &x_min, &x_max, &y_min, &y_max );
     if( result != 5 ) return NULL;
-    
-    
+        
     SRV1_Coordinate * new_coordinate = (SRV1_Coordinate*)malloc( sizeof( SRV1_Coordinate ) );
     new_coordinate->x = (x_min+x_max)/2;
     new_coordinate->y = (y_min+y_max)/2;

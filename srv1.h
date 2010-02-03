@@ -61,4 +61,4 @@ SDL_Surface * SRV1_getImage( SRV1_connection * connection, ImageSize size, Image
 int16_t SRV1_laserMeasureDistance( SRV1_connection * connection );
 
 void SRV1_setBlobColorRange( SRV1_connection * connection, uint8_t color_bin_index, uint8_t red_min, uint8_t red_max, uint8_t green_min, uint8_t green_max, uint8_t blue_min, uint8_t blue_max );
-SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, ImageSize image_size, uint8_t * array_size );
+SRV1_Coordinate * SRV1_findBlobs( SRV1_connection * connection, uint8_t color_bin_index, ImageSize image_size );
