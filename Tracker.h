@@ -7,14 +7,14 @@
  *
  */
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <math.h>
 #include "srv1.h"
 
-typedef struct _SRV1_Coordinate SRV1_Coordinate;
+#define PROXIMITY_THRESHOLD_Y 50
+#define PROXIMITY_THRESHOLD_X 50
 
-static bool isInMotion = FALSE;
+typedef struct _SRV1_Coordinate { double x; double y; } SRV1_Coordinate;
+
+SRV1_Coordinate * newCoordinate( double x, double y );
 
 double lineLength( SRV1_Coordinate * c );
 
@@ -22,5 +22,5 @@ double lineAngleFromY( SRV1_Coordinate * c );
 
 double lineAngleFromX( SRV1_Coordinate * c );
 
-void goFidoo( SRV1_Coordinate point_loc );
+void goFidoo( SRV1_connection * c, SRV1_Coordinate * point_loc );
 
